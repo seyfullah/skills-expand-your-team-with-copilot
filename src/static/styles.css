@@ -20,6 +20,8 @@
   --border: #e0e0e0;
   --border-light: #f0f0f0;
   --border-focus: #d0d0d0;
+  --tag-background: #e8eaf6;
+  --tag-text: #3949ab;
 
   /* Feedback colors */
   --success: #2e7d32;
@@ -30,6 +32,23 @@
   --error-light: #ffebee;
   --info: #0c5460;
   --info-light: #d1ecf1;
+}
+
+body.dark-mode {
+  color-scheme: dark;
+  --primary: #8c9eff;
+  --primary-light: #aab4ff;
+  --primary-dark: #5c6bc0;
+  --primary-text: #16162b;
+  --background: #121212;
+  --surface: #1e1e1e;
+  --text-primary: #f3f3f3;
+  --text-secondary: #b0b0b0;
+  --border: #3a3a3a;
+  --border-light: #2b2b2b;
+  --border-focus: #555555;
+  --tag-background: #303650;
+  --tag-text: #c5cbff;
 }
 
 * {
@@ -195,8 +214,8 @@ section h3 {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: #e8eaf6;
-  color: #3949ab;
+  background: var(--tag-background);
+  color: var(--tag-text);
   font-size: 0.65rem;
   font-weight: bold;
   padding: 2px 6px;
@@ -492,6 +511,8 @@ footer {
   border-radius: 20px 0 0 20px;
   font-size: 0.85rem;
   transition: all 0.3s ease;
+  color: var(--text-primary);
+  background-color: var(--surface);
 }
 
 .search-box input:focus {
@@ -617,6 +638,9 @@ footer {
   position: absolute;
   top: 10px;
   right: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 #user-status {
