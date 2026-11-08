@@ -40,6 +40,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let searchQuery = "";
   let currentDay = "";
   let currentTimeRange = "";
+  let sharedActivity = new URL(window.location.href).searchParams.get("activity");
+  let hasLocatedSharedActivity = false;
 
   // Authentication state
   let currentUser = null;
@@ -465,6 +467,10 @@ document.addEventListener("DOMContentLoaded", () => {
           <p>Try adjusting your search or filter criteria</p>
         </div>
       `;
+      if (sharedActivity !== null && !hasLocatedSharedActivity) {
+        showMessage("The shared activity could not be found.", "error");
+        sharedActivity = null;
+      }
       return;
     }
 
@@ -472,12 +478,92 @@ document.addEventListener("DOMContentLoaded", () => {
     Object.entries(filteredActivities).forEach(([name, details]) => {
       renderActivityCard(name, details);
     });
+
+    if (sharedActivity !== null) {
+      const card = Array.from(activitiesList.children).find(
+        (element) => element.dataset.activityName === sharedActivity
+      );
+      if (card) {
+        card.classList.add("shared-activity");
+        if (!hasLocatedSharedActivity) {
+          card.scrollIntoView({ block: "center" });
+          hasLocatedSharedActivity = true;
+        }
+      } else if (!hasLocatedSharedActivity) {
+        showMessage("The shared activity could not be found.", "error");
+        sharedActivity = null;
+      }
+    }
+  }
+
+  function createShareControls(name) {
+    const activityUrl = new URL("index.html", window.location.href);
+    activityUrl.search = "";
+    activityUrl.hash = "";
+    activityUrl.searchParams.set("activity", name);
+    const url = activityUrl.toString();
+    const text = `Check out ${name} at Mergington High School!`;
+    const controls = document.createElement("div");
+    controls.className = "share-controls";
+    controls.setAttribute("role", "group");
+    controls.setAttribute("aria-label", `Share ${name}`);
+
+    const label = document.createElement("span");
+    label.textContent = "Share:";
+    controls.appendChild(label);
+
+    const facebookUrl = new URL("https://www.facebook.com/sharer/sharer.php");
+    facebookUrl.searchParams.set("u", url);
+    const whatsappUrl = new URL("https://wa.me/");
+    whatsappUrl.searchParams.set("text", `${text} ${url}`);
+    const emailUrl = `mailto:?subject=${encodeURIComponent(name)}&body=${encodeURIComponent(`${text}\n\n${url}`)}`;
+
+    [
+      ["WhatsApp", whatsappUrl.toString()],
+      ["Facebook", facebookUrl.toString()],
+      ["Email", emailUrl],
+    ].forEach(([labelText, href]) => {
+      const link = document.createElement("a");
+      link.textContent = labelText;
+      link.href = href;
+      link.setAttribute("aria-label", `Share ${name} via ${labelText}`);
+      if (labelText !== "Email") {
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+      }
+      controls.appendChild(link);
+    });
+
+    const copyButton = document.createElement("button");
+    const status = document.createElement("span");
+    status.className = "share-status";
+    status.setAttribute("role", "status");
+    copyButton.type = "button";
+    copyButton.textContent = "Copy link";
+    copyButton.setAttribute("aria-label", `Copy link to ${name}`);
+    copyButton.addEventListener("click", async () => {
+      if (!navigator.clipboard || !navigator.clipboard.writeText) {
+        window.prompt("Copy this activity link:", url);
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(url);
+        status.textContent = "Link copied.";
+      } catch (error) {
+        console.error("Error copying activity link:", error);
+        window.prompt("Copy this activity link:", url);
+      }
+    });
+    controls.appendChild(copyButton);
+    controls.appendChild(status);
+    return controls;
   }
 
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
+    activityCard.dataset.activityName = name;
 
     // Calculate spots and capacity
     const totalSpots = details.max_participants;
@@ -572,6 +658,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       </div>
     `;
+
+    activityCard.appendChild(createShareControls(name));
 
     // Add click handlers for delete buttons
     const deleteButtons = activityCard.querySelectorAll(".delete-participant");
